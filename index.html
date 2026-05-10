@@ -98,7 +98,7 @@
                 <div class="cricle scale-in">
                     <div class="text__cricle">
                         <span style="--i: 1;">h</span><span style="--i: 2;">a</span><span style="--i: 3;">p</span><span style="--i: 4;">p</span><span style="--i: 5;">y</span><span style="--i: 6;">[...]
-                        <span style="--i: 7;">b</span><span style="--i: 8;">i</span><span style="--i: 9;">r</span><span style="--i: 10;">t</span><span style="--i: 11;">h</span><span style="--i: 1[...]
+                        <span style="--i: 7;">b</span><span style="--i: 8;">i</span><span style="--i: 9;">r</span><span style="--i: 10;">t</span><span style="--i: 11;">h</span><span style="--i: 12;">[...]
                     </div>
                     <i class="fa-solid fa-heart center-heart"></i>
                 </div>
@@ -159,69 +159,38 @@
         <!-- Advanced Scratch Card Modal -->
         <div id="scratch-modal" class="modal-box">
             <div class="letter__border scratch-card-box">
-                <div class="close btn-close-scratch">
-                    <i class="fa-solid fa-xmark"></i>
-                </div>
-
+                <div class="close btn-close-scratch"><i class="fa-solid fa-xmark"></i></div>
                 <h2 class="title__letter">Your Surprise 🎁</h2>
-
+                
                 <div class="scratch-container" id="scratch-container">
-
                     <div class="scratch-secret">
-
-                        <!-- ORIGINAL MESSAGE -->
                         <h3>
                             My Troublesome girl 💕
-                            <span id="hidden-gift">🎁</span>
+                            <span id="hidden-gift" class="gift-emoji">🎁</span>
                         </h3>
-
-                        <p>
-                            I coded this page only for you.
-                            Happy birthday Blessing oo 💖✨!
-                        </p>
-
+                        <p>I coded this page only for you. Happy birthday Blessing oo 💖✨!</p>
                     </div>
-
                     <canvas id="scratch-canvas"></canvas>
-
                 </div>
-
-                <p class="instruction mt-3 scratch-instruction">
-                    Scratch the gold foil to reveal!
-                </p>
+                <p class="instruction mt-3 scratch-instruction">Scratch the gold foil to reveal!</p>
             </div>
         </div>
 
-        <!-- HIDDEN EASTER EGG POPUP -->
-        <div id="easter-popup" class="modal-box">
-
-            <div class="letter__border easter-box">
-
-                <div class="close close-easter">
-                    <i class="fa-solid fa-xmark"></i>
-                </div>
-
-                <h2 class="title__letter">
-                    Secret Surprise 💻✨
-                </h2>
-
-                <div class="easter-content">
-
-                    <div class="easter-icon">
-                        🎁
+        <!-- Hidden Easter Egg Scratch Card Modal -->
+        <div id="easter-scratch-modal" class="modal-box">
+            <div class="letter__border easter-scratch-box">
+                <div class="close btn-close-easter"><i class="fa-solid fa-xmark"></i></div>
+                <h2 class="title__letter">Secret Surprise 💻✨</h2>
+                
+                <div class="scratch-container" id="easter-scratch-container">
+                    <div class="easter-scratch-secret">
+                        <div class="easter-icon">🎁</div>
+                        <p>A brand new laptop will be sent to you on the <strong>4th June</strong> 💖</p>
+                        <span>Only for my troublesome girl 💕</span>
                     </div>
-
-                    <p>
-                        On the 4th of June,
-                        a brand new laptop will be sent to you 💖
-                    </p>
-
-                    <span>
-                        Only for my troublesome girl 💕
-                    </span>
-
+                    <canvas id="easter-scratch-canvas"></canvas>
                 </div>
-
+                <p class="instruction mt-3 easter-scratch-instruction">Scratch to reveal your laptop gift!</p>
             </div>
         </div>
 
@@ -237,7 +206,7 @@
        MAIN SETUP & TEXTS
        ================================== */
     let datetxt = "10 May 2026"; 
-    let datatxtletter = "My love, You are a very special girl. I silently thank universe for bringing you into my life. I wish you endless joy, peace, and health. Let's celebrate many more togeth[...]
+    let datatxtletter = "My love, You are a very special girl. I silently thank universe for bringing you into my life. I wish you endless joy, peace, and health. Let's celebrate many more together! H[...]
     let titleLetter = "For My Special One";
     
     let charArrDate = datetxt.split('');
@@ -397,28 +366,6 @@
         setTimeout(() => $("#scratch-modal").fadeOut(400), 400);
     });
 
-    // EASTER EGG LOGIC
-    $("#hidden-gift").on("click touchstart", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Close the scratch modal
-        $("#scratch-modal .letter__border").removeClass("active");
-        setTimeout(() => $("#scratch-modal").fadeOut(400), 100);
-        
-        // Open the Easter egg popup after a delay
-        setTimeout(() => {
-            $("#easter-popup").css("display", "flex").hide().fadeIn(400);
-            setTimeout(() => $("#easter-popup .letter__border").addClass("active"), 100);
-            fireConfetti();
-        }, 500);
-    });
-
-    $(".close-easter").on("click", function(){
-        $("#easter-popup .letter__border").removeClass("active");
-        setTimeout(() => $("#easter-popup").fadeOut(400), 400);
-    });
-
     function initScratchCard() {
         const canvas = document.getElementById("scratch-canvas");
         const ctx = canvas.getContext("2d");
@@ -480,6 +427,107 @@
                     $(".scratch-secret").addClass("pop-gift");
                     $(".scratch-instruction").text("Yay! You found it! 🎉");
                     confetti({ particleCount: 100, spread: 60, origin: { y: 0.7 }, zIndex: 1500 });
+                }, 200);
+            }
+        }
+
+        canvas.addEventListener("mousedown", () => isDrawing = true);
+        canvas.addEventListener("touchstart", () => isDrawing = true);
+        canvas.addEventListener("mouseup", () => { isDrawing = false; checkReveal(); });
+        canvas.addEventListener("touchend", () => { isDrawing = false; checkReveal(); });
+        canvas.addEventListener("mousemove", scratch);
+        canvas.addEventListener("touchmove", scratch);
+    }
+
+    /* ==================================
+       HIDDEN GIFT EMOJI EASTER EGG
+       ================================== */
+    $("#hidden-gift").on("click touchstart", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Close the main scratch card
+        $(".btn-close-scratch").click();
+        
+        // Open the Easter egg scratch card after a delay
+        setTimeout(() => {
+            $("#easter-scratch-modal").css("display", "flex").hide().fadeIn(400);
+            setTimeout(() => $("#easter-scratch-modal .letter__border").addClass("active"), 100);
+            
+            // Reset Easter scratch card
+            $(".easter-scratch-secret").removeClass("pop-gift");
+            $("#easter-scratch-canvas").show().css("opacity", "1");
+            $(".easter-scratch-instruction").text("Scratch to reveal your laptop gift!");
+            initEasterScratchCard();
+        }, 500);
+    });
+
+    $(".btn-close-easter").on("click", function(){
+        $("#easter-scratch-modal .letter__border").removeClass("active");
+        setTimeout(() => $("#easter-scratch-modal").fadeOut(400), 400);
+    });
+
+    function initEasterScratchCard() {
+        const canvas = document.getElementById("easter-scratch-canvas");
+        const ctx = canvas.getContext("2d");
+        const container = document.getElementById("easter-scratch-container");
+        
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+        
+        // Gold Foil Background
+        let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, "#D4AF37");
+        gradient.addColorStop(0.5, "#FFDF73");
+        gradient.addColorStop(1, "#AA7700");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Foil Text
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.font = "bold 20px Poppins";
+        ctx.textAlign = "center";
+        ctx.fillText("✨ SURPRISE ✨", canvas.width/2, canvas.height/2 + 8);
+
+        let isDrawing = false;
+        let isRevealed = false;
+        
+        function getBrushPos(e) {
+            let rect = canvas.getBoundingClientRect();
+            let x = (e.clientX || e.touches[0].clientX) - rect.left;
+            let y = (e.clientY || e.touches[0].clientY) - rect.top;
+            return { x, y };
+        }
+
+        function scratch(e) {
+            if (!isDrawing || isRevealed) return;
+            e.preventDefault();
+            let pos = getBrushPos(e);
+            ctx.globalCompositeOperation = "destination-out";
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 25, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function checkReveal() {
+            if(isRevealed) return;
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let transparentPixels = 0;
+            for (let i = 3; i < imageData.data.length; i += 4) {
+                if (imageData.data[i] === 0) transparentPixels++;
+            }
+            const percentage = (transparentPixels / (canvas.width * canvas.height)) * 100;
+            
+            // Auto Reveal if 45% is scratched!
+            if (percentage > 45) { 
+                isRevealed = true;
+                $(canvas).animate({opacity: 0}, 500, function(){ $(this).hide(); });
+                
+                // Pop the surprise out!
+                setTimeout(() => {
+                    $(".easter-scratch-secret").addClass("pop-gift");
+                    $(".easter-scratch-instruction").text("Yay! Your laptop is on the way! 🎉");
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, zIndex: 1500 });
                 }, 200);
             }
         }
