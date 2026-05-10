@@ -83,7 +83,7 @@
                     </div>
                     <div class="name">
                         <i class="fa-solid fa-heart beat"></i>
-                        <span>Blessing</span>
+                        <span id="name-blessing" class="clickable-name" title="Click for a hidden surprise">Blessing</span>
                         <i class="fa-solid fa-heart beat"></i>
                     </div>
                     
@@ -174,6 +174,23 @@
             </div>
         </div>
 
+        <!-- Hidden Easter Egg Scratch Card Modal -->
+        <div id="scratch-modal-easter" class="modal-box">
+            <div class="letter__border scratch-card-box">
+                <div class="close btn-close-scratch-easter"><i class="fa-solid fa-xmark"></i></div>
+                <h2 class="title__letter">Hidden Surprise ✨</h2>
+                
+                <div class="scratch-container" id="scratch-container-easter">
+                    <div class="scratch-secret scratch-secret-easter">
+                        <h3>Secret Love Note</h3>
+                        <p>You found my hidden surprise! Blessing, you are the brightest part of my life. Happy birthday, my love! 💌</p>
+                    </div>
+                    <canvas id="scratch-canvas-easter"></canvas>
+                </div>
+                <p class="instruction mt-3 scratch-instruction scratch-instruction-easter">Scratch the gold foil to reveal your hidden message!</p>
+            </div>
+        </div>
+
     </div>
 
     <!-- Modified Developer Credit -->
@@ -185,7 +202,7 @@
     /* ==================================
        MAIN SETUP & TEXTS
        ================================== */
-    let datetxt = "10 May 2026"; 
+    let datetxt = "10 May 2024"; 
     let datatxtletter = "My love, You are a very special girl. I silently thank universe for bringing you into my life. I wish you endless joy, peace, and health. Let's celebrate many more together! Happy birthday! 💖✨";
     let titleLetter = "For My Special One";
     
@@ -330,51 +347,72 @@
        ADVANCED SCRATCH CARD LOGIC
        ================================== */
     let scratchCanvasInit = false;
+    let scratchCanvasInitEaster = false;
+
     $("#btn__scratch").on("click", function() {
-        $("#scratch-modal").css("display", "flex").hide().fadeIn(400);
-        setTimeout(() => $("#scratch-modal .letter__border").addClass("active"), 100);
-        
-        // Reset states
-        $(".scratch-secret").removeClass("pop-gift");
-        $("#scratch-canvas").show().css("opacity", "1");
-        $(".scratch-instruction").text("Scratch the gold foil to reveal your gift!");
-        initScratchCard();
+        openScratchModal({
+            modalId: "#scratch-modal",
+            canvasId: "scratch-canvas",
+            containerId: "scratch-container",
+            secretClass: ".scratch-secret",
+            instructionSelector: ".scratch-instruction",
+            instructionText: "Scratch the gold foil to reveal your gift!"
+        });
+    });
+
+    $("#name-blessing").on("click", function() {
+        openScratchModal({
+            modalId: "#scratch-modal-easter",
+            canvasId: "scratch-canvas-easter",
+            containerId: "scratch-container-easter",
+            secretClass: ".scratch-secret-easter",
+            instructionSelector: ".scratch-instruction-easter",
+            instructionText: "Scratch the gold foil to reveal your hidden message!"
+        });
     });
 
     $(".btn-close-scratch").on("click", function(){
-        $("#scratch-modal .letter__border").removeClass("active");
-        setTimeout(() => $("#scratch-modal").fadeOut(400), 400);
+        closeScratchModal("#scratch-modal");
     });
 
-    function initScratchCard() {
-        const canvas = document.getElementById("scratch-canvas");
+    $(".btn-close-scratch-easter").on("click", function(){
+        closeScratchModal("#scratch-modal-easter");
+    });
+
+    function openScratchModal(options) {
+        $(options.modalId).css("display", "flex").hide().fadeIn(400);
+        setTimeout(() => $(`${options.modalId} .letter__border`).addClass("active"), 100);
+
+        $(options.secretClass).removeClass("pop-gift");
+        $("#" + options.canvasId).show().css("opacity", "1");
+        $(options.instructionSelector).text(options.instructionText);
+        initScratchCard(options.canvasId, options.containerId, options.secretClass, options.instructionSelector);
+    }
+
+    function closeScratchModal(modalId) {
+        $(`${modalId} .letter__border`).removeClass("active");
+        setTimeout(() => $(modalId).fadeOut(400), 400);
+    }
+
+    function initScratchCard(canvasId, containerId, secretClass, instructionSelector) {
+        const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext("2d");
-        const container = document.getElementById("scratch-container");
-        
+        const container = document.getElementById(containerId);
+
         canvas.width = container.offsetWidth;
         canvas.height = container.offsetHeight;
-        
-        // Realistic Gold Foil Background
-        let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, "#D4AF37");
-        gradient.addColorStop(0.5, "#FFDF73");
-        gradient.addColorStop(1, "#AA7700");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Foil Text
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-        ctx.font = "bold 22px Poppins";
-        ctx.textAlign = "center";
-        ctx.fillText("✨ SCRATCH ME ✨", canvas.width/2, canvas.height/2 + 8);
+        canvas.style.opacity = "1";
+        canvas.style.display = "block";
+
+        drawScratchFoil(ctx, canvas.width, canvas.height);
 
         let isDrawing = false;
         let isRevealed = false;
-        
+
         function getBrushPos(e) {
             let rect = canvas.getBoundingClientRect();
-            let x = (e.clientX || e.touches[0].clientX) - rect.left;
-            let y = (e.clientY || e.touches[0].clientY) - rect.top;
+            let x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            let y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             return { x, y };
         }
 
@@ -384,39 +422,55 @@
             let pos = getBrushPos(e);
             ctx.globalCompositeOperation = "destination-out";
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, 25, 0, 2 * Math.PI); // Bigger brush
+            ctx.arc(pos.x, pos.y, 25, 0, 2 * Math.PI);
             ctx.fill();
         }
 
         function checkReveal() {
-            if(isRevealed) return;
+            if (isRevealed) return;
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             let transparentPixels = 0;
             for (let i = 3; i < imageData.data.length; i += 4) {
                 if (imageData.data[i] === 0) transparentPixels++;
             }
             const percentage = (transparentPixels / (canvas.width * canvas.height)) * 100;
-            
-            // Auto Reveal if 45% is scratched!
-            if (percentage > 45) { 
+
+            if (percentage > 45) {
                 isRevealed = true;
                 $(canvas).animate({opacity: 0}, 500, function(){ $(this).hide(); });
-                
-                // Pop the gift out!
+
                 setTimeout(() => {
-                    $(".scratch-secret").addClass("pop-gift");
-                    $(".scratch-instruction").text("Yay! You found it! 🎉");
+                    $(secretClass).addClass("pop-gift");
+                    $(instructionSelector).text("Yay! You found it! 🎉");
                     confetti({ particleCount: 100, spread: 60, origin: { y: 0.7 }, zIndex: 1500 });
                 }, 200);
             }
         }
 
-        canvas.addEventListener("mousedown", () => isDrawing = true);
-        canvas.addEventListener("touchstart", () => isDrawing = true);
-        canvas.addEventListener("mouseup", () => { isDrawing = false; checkReveal(); });
-        canvas.addEventListener("touchend", () => { isDrawing = false; checkReveal(); });
-        canvas.addEventListener("mousemove", scratch);
-        canvas.addEventListener("touchmove", scratch);
+        if (!canvas._scratchInitialized) {
+            canvas.addEventListener("mousedown", () => isDrawing = true);
+            canvas.addEventListener("touchstart", () => isDrawing = true);
+            canvas.addEventListener("mouseup", () => { isDrawing = false; checkReveal(); });
+            canvas.addEventListener("touchend", () => { isDrawing = false; checkReveal(); });
+            canvas.addEventListener("mousemove", scratch);
+            canvas.addEventListener("touchmove", scratch);
+            canvas._scratchInitialized = true;
+        }
+    }
+
+    function drawScratchFoil(ctx, width, height) {
+        ctx.globalCompositeOperation = "source-over";
+        let gradient = ctx.createLinearGradient(0, 0, width, height);
+        gradient.addColorStop(0, "#D4AF37");
+        gradient.addColorStop(0.5, "#FFDF73");
+        gradient.addColorStop(1, "#AA7700");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.font = "bold 22px Poppins";
+        ctx.textAlign = "center";
+        ctx.fillText("✨ SCRATCH ME ✨", width / 2, height / 2 + 8);
     }
 
     /* ==================================
@@ -442,4 +496,3 @@
 </script>
 </body>
 </html>
-
